@@ -1,0 +1,23 @@
+{
+  "name": "@pdfts/fonts",
+  "version": "0.0.1",
+  "description": "",
+  "main": "converter.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/pdfts/fonts.git"
+  },
+  "author": "QQping",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/pdfts/fonts/issues"
+  },
+  "homepage": "https://github.com/pdfts/fonts#readme",
+  "devDependencies": {
+    "node-gzip": "^1.1.2",
+    "opentype.js": "^1.1.0"
+  }
+}
