@@ -31,7 +31,7 @@ fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
         FontFamily: font.tables.name.fontFamily.en,
         FontStretch: 'Normal',
         FontWeight: font.tables.os2.usWeightClass,
-        Flags: 0,
+        Flags: font.tables.head.flags,
         FontBBox: [
           font.tables.head.xMin,
           font.tables.head.yMin,
