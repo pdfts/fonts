@@ -10,20 +10,26 @@ fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
 
   for (var item of items) {
     var font = opentype.loadSync(__dirname + '/fontfiles/' + item);
-    var fontFile = fs.readFileSync(__dirname + '/fontfiles/' + item);
+    var fontFile = fs.readFileSync(__dirname + '/fontfiles/' + item, 'utf8');
     var fontBuffer = Buffer.from(fontFile, 'utf-8');
     var glyphKeys = Object.keys(font.glyphs.glyphs);
     var widths = [];
 
-    glyphKeys.forEach(key => {
-      widths.push(font.glyphs.glyphs[key].advanceWidth);
+    var glyphmap = Object.keys(font.tables.cmap.glyphIndexMap);
+
+    glyphmap.forEach(key => {
+      for (let glyph in font.glyphs.glyphs) {
+        if (parseInt(glyph) === font.tables.cmap.glyphIndexMap[parseInt(key)]) {
+          widths.push(font.glyphs.glyphs[parseInt(glyph)].advanceWidth);
+        }
+      }
     });
 
     var fontInfo = {
       Subtype: 'TrueType',
       BaseFont: font.names.postScriptName.en,
-      FirstChar: glyphKeys[0],
-      LastChar: glyphKeys[glyphKeys.length - 1],
+      FirstChar: parseInt(glyphmap[0]),
+      LastChar: parseInt(glyphmap[0]) + widths.length,
       Widths: widths,
       FontDescriptor: {
         Type: 'FontDescriptor',
@@ -53,17 +59,17 @@ fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
         AvgWidth: font.tables.os2.xAvgCharWidth,
         MaxWidth: font.tables.hhea.advanceWidthMax,
         FontFile2: {
-          Length: utf8Encode.encode(fontBuffer).length,
-          Length1: 0,
+          Length: 0,
+          Length1: utf8Encode.encode(fontBuffer).byteLength,
           Stream: ''
         }
       }
     };
 
     const result = await gzip(fontBuffer);
-    fontInfo.FontDescriptor.FontFile2.Length1 = utf8Encode.encode(
+    fontInfo.FontDescriptor.FontFile2.Length = utf8Encode.encode(
       result
-    ).length;
+    ).byteLength;
     fontInfo.FontDescriptor.FontFile2.Stream = result.toString('base64');
 
     fs.writeFileSync(
