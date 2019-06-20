@@ -2,16 +2,18 @@ var opentype = require('opentype.js');
 var fs = require('fs');
 const { gzip } = require('node-gzip');
 
+const zlib = require('zlib');
+
 var util = require('util');
 var utf8Encode = new util.TextEncoder('utf-8');
 
 fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
-  items = items.filter(file => file.endsWith('.ttf'));
+  items = items.filter(file => file.endsWith('diverda.ttf'));
 
   for (var item of items) {
     var font = opentype.loadSync(__dirname + '/fontfiles/' + item);
-    var fontFile = fs.readFileSync(__dirname + '/fontfiles/' + item, 'utf8');
-    var fontBuffer = Buffer.from(fontFile, 'utf-8');
+    var fontFile = fs.readFileSync(__dirname + '/fontfiles/' + item);
+    var fontBuffer = Buffer.from(fontFile, 'binary');
     var glyphKeys = Object.keys(font.glyphs.glyphs);
     var widths = [];
 
@@ -29,7 +31,7 @@ fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
       Subtype: 'TrueType',
       BaseFont: font.names.postScriptName.en,
       FirstChar: parseInt(glyphmap[0]),
-      LastChar: parseInt(glyphmap[0]) + widths.length,
+      LastChar: parseInt(glyphmap[0]) + widths.length - 1,
       Widths: widths,
       FontDescriptor: {
         Type: 'FontDescriptor',
@@ -66,15 +68,24 @@ fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
       }
     };
 
-    const result = await gzip(fontBuffer);
-    fontInfo.FontDescriptor.FontFile2.Length = utf8Encode.encode(
-      result
-    ).byteLength;
-    fontInfo.FontDescriptor.FontFile2.Stream = result.toString('base64');
+    console.log(fontBuffer.byteLength);
+    console.log(fontBuffer.length);
+
+    const result = zlib.deflateSync(fontBuffer);
+
+    console.log(result.byteLength);
+    console.log(result.length);
+
+    fontInfo.FontDescriptor.FontFile2.Length = result.byteLength;
 
     fs.writeFileSync(
       `compiled/${item.replace('.ttf', '.json').toLowerCase()}`,
       JSON.stringify(fontInfo)
+    );
+
+    fs.writeFileSync(
+      `compiled/${item.replace('.ttf', '.compressed.ttf').toLowerCase()}`,
+      result
     );
   }
 });
