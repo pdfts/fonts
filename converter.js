@@ -8,7 +8,7 @@ var util = require('util');
 var utf8Encode = new util.TextEncoder('utf-8');
 
 fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
-  items = items.filter(file => file.endsWith('diverda.ttf'));
+  items = items.filter(file => file.endsWith('franklin.ttf'));
 
   for (var item of items) {
     var font = opentype.loadSync(__dirname + '/fontfiles/' + item);
@@ -77,6 +77,11 @@ fs.readdir(__dirname + '/fontfiles/', async function(err, items) {
     console.log(result.length);
 
     fontInfo.FontDescriptor.FontFile2.Length = result.byteLength;
+
+    fs.writeFileSync(
+      `compiled/${item.replace('.ttf', '.font.json').toLowerCase()}`,
+      JSON.stringify(font.glyphs.glyphs)
+    );
 
     fs.writeFileSync(
       `compiled/${item.replace('.ttf', '.json').toLowerCase()}`,
